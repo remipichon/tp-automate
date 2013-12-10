@@ -1,0 +1,10 @@
+Exception: STATUS_ACCESS_VIOLATION at eip=00401287
+eax=00000000 ebx=0028AC5C ecx=80000038 edx=61185CE0 esi=00000000 edi=0028CD84
+ebp=0028ABF8 esp=0028ABD0 program=C:\Users\Kiki\Google Drive\3TCA\ubuntuServer\programmation\tp6 automate\testEnsemble.exe, pid 8132, thread main
+cs=0023 ds=002B es=002B fs=0053 gs=002B ss=002B
+Stack trace:
+Frame     Function  Args
+0028ABF8  00401287 (00000000, 800482E8, 6119EF5B, 611240DF)
+0028AC38  0040147E (00000001, 0028AC5C, 80010100, 61007F58)
+0028ACF8  61007FB5 (00000000, 0028CD84, 61007120, 00000000)
+End of stack trace
