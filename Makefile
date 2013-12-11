@@ -29,8 +29,10 @@ $(TOOL): $(TOOL).c  tp_agp_auto.c
 	$(CC)  $(CFLAGS)  $(TOOL).c -c -o $(TOOL).o 
 	@echo "#########Compilation des action faites sur l'AST (votre travail)"
 	$(CC) $(CFLAGS) tp_agp_auto.c -c
+	@echo "#########Compilation des action faites sur l'AST (votre travail)"
+	$(CC) $(CFLAGS) ensemble.c -c
 	@echo "#########Edition de lien: production du generateur d'automate"
-	$(CC) $(CFLAGS)   $(TOOL).o  tp_agp_auto.o -o $@ 
+	$(CC) $(CFLAGS)  ensemble.o $(TOOL).o  tp_agp_auto.o -o $@ 
 	@echo "#########Exemple d'utilisation: "$(TOOL)" < ex1.reg"
 
 #automate.c : fichier d'exemple de programme C implementant automate

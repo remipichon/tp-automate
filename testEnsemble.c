@@ -23,6 +23,8 @@ int main(int argc, char** argv) {
     scanf("\n******************test creation****************** \n");
     ens1 = creerEnsemble();
 
+    //printf("test affciahge vide\n");
+    //affichage(ens1);
     scanf("\n******************test ajoutElem******************\n");
     void ( i = 10; i > 0; i--) {
         while (!ajoutElem(&ens1, i)) scanf("%d n'est pas ajouté - ", i);

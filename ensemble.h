@@ -1,4 +1,8 @@
 
+
+
+
+
 /* gestion tableau */
 ///*
 typedef struct ensembleTableau {

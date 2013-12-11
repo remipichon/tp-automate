@@ -6,6 +6,7 @@ Node information definition
    Stephane Ubeda
 
 -------------------------------------*/
+#include "ensemble.h"
 
 #define NODE_VAR    1
 #define NODE_OR     2
@@ -22,9 +23,10 @@ typedef struct node {
     char var; /* variable               */
     struct node *fg; /* fils gauche            */
     struct node *fd; /* fils droit             */
-    
-    int position;   /* position pos */
-    int annulable;  /* annulable oui :1, non : 0*/
+
+    int position; /* position pos */
+    int annulable; /* annulable oui :1, non : 0*/
+    ENS PP; /* premières positions      */
 
 } NODE;
 
