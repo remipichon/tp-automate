@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "tree_agp.h"
 
@@ -34,7 +35,9 @@ void afficherDecoration(NODE *root) {
 }
 
 int feuille(NODE *root) {
-    if (root->fd == NULL && root->fg == NULL) return 1;
+    if (root->fd == NULL && root->fg == NULL
+            && root->type_node != NODE_STAR //KIKI pas sur de son utilité !
+            ) return 1;
     return 0;
 }
 
@@ -88,7 +91,7 @@ void setPDPNoeud_var(NODE* noeud, int var, int PorD) {
 
 void setPDPNoeud(NODE* noeud, NODE* FG, NODE* FD, int PorD) {
     //pas propre ici !
-    if (FD == NULL) FD = (NODE*) malloc(sizeof(NODE));
+    if (FD == NULL) FD = (NODE*) malloc(sizeof (NODE));
     ENS ens = creerEnsemble();
     ENS ens1 = creerEnsemble();
     ENS ens2 = creerEnsemble();
@@ -100,12 +103,12 @@ void setPDPNoeud(NODE* noeud, NODE* FG, NODE* FD, int PorD) {
         ens1 = FG->DP;
         ens2 = FD->DP;
     }
-    
+
     if (ens2 == NULL) ens2 = creerEnsemble();
 
     ens = unionEns(ens1, ens2);
-    
-     if (PorD == _PP) {
+
+    if (PorD == _PP) {
         noeud->PP = ens;
     } else {
         noeud->DP = ens;
@@ -127,7 +130,7 @@ void setPDP(NODE* node, int PorD) {
             if (isAnnulable(node->fg)) {
                 setPDPNoeud(node, node->fg, node->fd, PorD);
             } else {
-                if( PorD == _PP )
+                if (PorD == _PP)
                     setPDPNoeud(node, node->fg, NULL, PorD);
                 else
                     setPDPNoeud(node, node->fd, NULL, PorD);
@@ -139,7 +142,56 @@ void setPDP(NODE* node, int PorD) {
 
 }
 
-void initRoot(NODE* root) {
+void setPosSuivante(NODE* node, ENS* posSuivante[20]) {
+    int i, j;
+
+     //printf("just call type node : %d\n",node->type_node);
+
+    if (node != NULL && feuille(node) == 0) {
+       // printf("pouet1\n");
+        setPosSuivante(node->fg, posSuivante);
+        //printf("pouet2 type %d\n",node->type_node);
+        if( node->type_node != NODE_STAR) setPosSuivante(node->fd, posSuivante); //parce qu'un star n'a pas de fils droit
+       // printf("type node : %d\n",node->type_node);
+        //printf("pouet3\n");
+        if (node->type_node == NODE_AND) {
+            //printf("node and\n");
+            //pour toute les DP de fg
+                        for (i = 1; i < 20; i++) {
+                            if (existeElem(node->fg->DP, i) == 1) {
+                                //printf("DernierePos(c1): %d\n",i);
+                                //pour toute les PP de fg
+                                for (j = 1; j < 20; j++) {
+                                    // NODE* = node->fd;
+                                    if (existeElem(node->fd->PP, j)) {
+                                        //on ajoute la position j dans la possuivante de i
+                                        printf("ajout de %d dans posSuivante(%d)\n", j, i);
+                                        ajoutElem(&(posSuivante[i]), j);
+                                    }
+                                }
+                            }
+                        }
+
+        } else if (node->type_node == NODE_STAR) {
+            //printf("else\n");
+            for (i = 0; i < 19; i++) {
+               // printf("i : %d\n", i);
+                if (existeElem(node->DP, i + 1)) { //i est une position de dernierepos(n)
+                    for (j = 0; j < 19; j++) {
+                       // printf("j : %d\n", j);
+                        if (existeElem(node->PP, j + 1)) { //toutes les PP(n))
+                            printf("ajout de %d dans posSuivante(%d)\n", j + 1, i + 1);
+                            ajoutElem(&(posSuivante[i + 1]), j + 1);
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+}
+
+void initRoot(NODE * root) {
     if (root != NULL) {
         initRoot(root->fg);
         initRoot(root->fd);
@@ -155,7 +207,8 @@ void initRoot(NODE* root) {
 
 /*-----------------------------------------------------------------*/
 
-void tp(NODE *root) {
+void tp(NODE * root) {
+    printf("c'est le debut\n");
     initRoot(root);
     //affichage regexp
     printf("regex : ");
@@ -171,8 +224,23 @@ void tp(NODE *root) {
     //afficherDecoration(root);
     printf("set PP\n");
     setPDP(root, _PP);
-    setPDP(root,_DP);
-    afficherDecoration(root);
+    setPDP(root, _DP);
+    //afficherDecoration(root);
+
+    int i;
+    printf("set pos suivante\n");
+    ENS * posSuivante[20];
+    for (i = 0; i < 20; i++) {
+        posSuivante[i] = creerEnsemble();
+    }
+    setPosSuivante(root, &posSuivante);
+
+
+    printf("affichage pos suviante\n");
+    for (i = 1; i < 20; i++) {
+        printf("posSuivante(%d) : ",i);
+        affichage(posSuivante[i]);
+    }
 
 
 
