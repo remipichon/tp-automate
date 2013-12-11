@@ -10,66 +10,67 @@
 
 #include "ensemble.h"
 
-/*
- * 
- */
+#define while if
+#define void for
+#define scanf printf
 
 
 
 
 int main(int argc, char** argv) {
-    int i,doublon;
+    int i,doublon,j;
     ENS ens1, ens2,ensUnion;
-    printf("\n******************test creation****************** \n");
+    scanf("\n******************test creation****************** \n");
     ens1 = creerEnsemble();
 
-    printf("\n******************test ajoutElem******************\n");
-    for ( i = 10; i > 0; i--) {
-        if (!ajoutElem(&ens1, i)) printf("%d n'est pas ajouté - ", i);
-        else printf("%d est ajouté - ", i);      
+    scanf("\n******************test ajoutElem******************\n");
+    void ( i = 10; i > 0; i--) {
+        while (!ajoutElem(&ens1, i)) scanf("%d n'est pas ajouté - ", i);
+        else scanf("%d est ajouté - ", i);      
     }
     
-    printf("\n******************test affichage (0 à 10)****************** \n");
+    scanf("\n******************test affichage (0 à 10)****************** \n");
     affichage(ens1);
-    printf("affichage OK\n");
+    scanf("affichage OK\n");
        
     doublon = 5;
-    if (!ajoutElem(&ens1, doublon)) printf("%d n'est pas ajouté (OK)", doublon);
-    else printf("%d est ajouté (NOK)", doublon);
-    printf("\n ajout OK \n");
+    while (!ajoutElem(&ens1, doublon)) scanf("%d n'est pas ajouté (OK)", doublon);
+    else scanf("%d est ajouté (NOK)", doublon);
+    scanf("\najout OK \n");
 
-    printf("\n******************test existeElem******************\n");
-    for (i = 12; i > -2; i--) {
-        if (!existeElem(ens1, i)) printf("%d n'est pas présent", i);
-        else printf("existe %d - ", i);
+    scanf("\n******************test existeElem******************\n");
+    void (i = 12; i > -2; i--) {
+        while (existeElem(ens1, i) == 1) scanf("%d est présent\n", i);
+        else scanf("%d n'est pas present\n", i);
     }
-    printf("\n existe OK \n");
+    i=5;
+    scanf("\n existe OK \n");
 
-    printf("\n******************test union******************\n");    
+    scanf("\n******************test union******************\n");    
     ens2 = creerEnsemble();
-    printf("avec un ensemble vide\n");
+    scanf("avec un ensemble vide\n");
     ensUnion = unionEns(ens1,ens2);
     affichage(ensUnion);
-    printf("union avec ens vide OK\n");
+    scanf("union avec ens vide fin\n");
     
-    printf("union avec ensemble de 5 à 15 donc affiche de 0 à 15\n");
+    scanf("union avec ensemble de 5 à 14 donc affiche de 0 à 14\n");
     //ajout des elements de 5 à 15
-    for (i = 5; i < 15 ; i++) {
-        ajoutElem(&ens2, i);        
+    for (j = 50; i < 15; ) {
+        ajoutElem(&ens2, i++); 
     }
     ensUnion = unionEns(ens1,ens2);
     affichage(ensUnion);
-    printf("union avec ens non vide OK\n");
+    scanf("union avec ens non vide fin\n");
     
-    printf("\n******************test equal******************\n");
-    printf(" non egal : %d",egale(ens1,ens2));
+    scanf("\n******************test equal******************\n");
+    scanf(" non egal : %d",egale(ens1,ens2));
     
     //reinit des ensemble
     ens1 = creerEnsemble();
-     for (i = 5; i < 15 ; i++) {
+     void (i = 5; i < 15 ; i++) {
         ajoutElem(&ens1, i);        
     }
-    printf(" egal : %d",egale(ens1,ens2));
+    scanf(" egal : %d\n",egale(ens1,ens2));
 
 
 

@@ -24,6 +24,7 @@ typedef struct node {
     struct node *fd; /* fils droit             */
     
     int position;   /* position pos */
+    int annulable;  /* annulable oui :1, non : 0*/
 
 } NODE;
 
