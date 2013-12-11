@@ -166,7 +166,7 @@ void setPosSuivante(NODE* node, ENS* posSuivante[20]) {
                                     if (existeElem(node->fd->PP, j)) {
                                         //on ajoute la position j dans la possuivante de i
                                         printf("ajout de %d dans posSuivante(%d)\n", j, i);
-                                        ajoutElem(&(posSuivante[i]), j);
+                                        ajoutElem(&(posSuivante[i-1]), j);
                                     }
                                 }
                             }
@@ -181,7 +181,7 @@ void setPosSuivante(NODE* node, ENS* posSuivante[20]) {
                        // printf("j : %d\n", j);
                         if (existeElem(node->PP, j + 1)) { //toutes les PP(n))
                             printf("ajout de %d dans posSuivante(%d)\n", j + 1, i + 1);
-                            ajoutElem(&(posSuivante[i + 1]), j + 1);
+                            ajoutElem(&(posSuivante[i]), j + 1);
                         }
                     }
                 }
@@ -191,13 +191,17 @@ void setPosSuivante(NODE* node, ENS* posSuivante[20]) {
     }
 }
 
-void initRoot(NODE * root) {
+int initRoot(NODE * root, int nbPos) {
+
     if (root != NULL) {
-        initRoot(root->fg);
-        initRoot(root->fd);
+        if( feuille(root) ) nbPos++;
+        nbPos = initRoot(root->fg,nbPos);
+        nbPos = initRoot(root->fd,nbPos);
         //init des attributs
         root->PP = creerEnsemble();
     }
+    
+    return nbPos;
 }
 
 
@@ -208,8 +212,9 @@ void initRoot(NODE * root) {
 /*-----------------------------------------------------------------*/
 
 void tp(NODE * root) {
-    printf("c'est le debut\n");
-    initRoot(root);
+    printf("**********************   Debut :\n");
+    int nbPos = initRoot(root,0);
+    printf("nb pos : %d\n",nbPos);
     //affichage regexp
     printf("regex : ");
     afficherER(root);
@@ -225,20 +230,20 @@ void tp(NODE * root) {
     printf("set PP\n");
     setPDP(root, _PP);
     setPDP(root, _DP);
-    //afficherDecoration(root);
+    afficherDecoration(root);
 
     int i;
     printf("set pos suivante\n");
-    ENS * posSuivante[20];
-    for (i = 0; i < 20; i++) {
+    ENS * posSuivante[nbPos];
+    for (i = 0; i < nbPos; i++) {
         posSuivante[i] = creerEnsemble();
     }
     setPosSuivante(root, &posSuivante);
 
 
     printf("affichage pos suviante\n");
-    for (i = 1; i < 20; i++) {
-        printf("posSuivante(%d) : ",i);
+    for (i = 0; i < nbPos; i++) {
+        printf("posSuivante(%d) : ",i+1);
         affichage(posSuivante[i]);
     }
 
