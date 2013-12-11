@@ -142,45 +142,37 @@ void setPDP(NODE* node, int PorD) {
 
 }
 
-void setPosSuivante(NODE* node, ENS* posSuivante[20]) {
+void setPosSuivante(NODE* node, ENS** posSuivante, int nbPos) {
     int i, j;
 
-     //printf("just call type node : %d\n",node->type_node);
-
     if (node != NULL && feuille(node) == 0) {
-       // printf("pouet1\n");
-        setPosSuivante(node->fg, posSuivante);
-        //printf("pouet2 type %d\n",node->type_node);
-        if( node->type_node != NODE_STAR) setPosSuivante(node->fd, posSuivante); //parce qu'un star n'a pas de fils droit
-       // printf("type node : %d\n",node->type_node);
-        //printf("pouet3\n");
+
+        setPosSuivante(node->fg, posSuivante, nbPos);
+        if (node->type_node != NODE_STAR) setPosSuivante(node->fd, posSuivante, nbPos); //parce qu'un star n'a pas de fils droit
+
         if (node->type_node == NODE_AND) {
-            //printf("node and\n");
             //pour toute les DP de fg
-                        for (i = 1; i < 20; i++) {
-                            if (existeElem(node->fg->DP, i) == 1) {
-                                //printf("DernierePos(c1): %d\n",i);
-                                //pour toute les PP de fg
-                                for (j = 1; j < 20; j++) {
-                                    // NODE* = node->fd;
-                                    if (existeElem(node->fd->PP, j)) {
-                                        //on ajoute la position j dans la possuivante de i
-                                        printf("ajout de %d dans posSuivante(%d)\n", j, i);
-                                        ajoutElem(&(posSuivante[i-1]), j);
-                                    }
-                                }
-                            }
+            for (i = 1; i <= nbPos; i++) { 
+                if (existeElem(node->fg->DP, i) == 1) {
+                    //pour toute les PP de fg
+                    for (j = 1; j <= nbPos; j++) {
+                        if (existeElem(node->fd->PP, j)) {
+                            //on ajoute la position j dans la possuivante de i
+                            //printf("ajout de %d dans posSuivante(%d)\n", j, i);
+                            ajoutElem(&(posSuivante[i - 1]), j);
                         }
+                    }
+                }
+            }
 
         } else if (node->type_node == NODE_STAR) {
-            //printf("else\n");
-            for (i = 0; i < 19; i++) {
-               // printf("i : %d\n", i);
+            //pour toute les positions de PremierePose(n)
+            for (i = 0; i <= nbPos; i++) {
                 if (existeElem(node->DP, i + 1)) { //i est une position de dernierepos(n)
-                    for (j = 0; j < 19; j++) {
-                       // printf("j : %d\n", j);
-                        if (existeElem(node->PP, j + 1)) { //toutes les PP(n))
-                            printf("ajout de %d dans posSuivante(%d)\n", j + 1, i + 1);
+                    //pour toutes les possitions PP(n)
+                    for (j = 0; j <= nbPos; j++) {
+                        if (existeElem(node->PP, j + 1)) { 
+                            //printf("ajout de %d dans posSuivante(%d)\n", j + 1, i + 1);
                             ajoutElem(&(posSuivante[i]), j + 1);
                         }
                     }
@@ -194,13 +186,13 @@ void setPosSuivante(NODE* node, ENS* posSuivante[20]) {
 int initRoot(NODE * root, int nbPos) {
 
     if (root != NULL) {
-        if( feuille(root) ) nbPos++;
-        nbPos = initRoot(root->fg,nbPos);
-        nbPos = initRoot(root->fd,nbPos);
+        if (feuille(root)) nbPos++;
+        nbPos = initRoot(root->fg, nbPos);
+        nbPos = initRoot(root->fd, nbPos);
         //init des attributs
         root->PP = creerEnsemble();
     }
-    
+
     return nbPos;
 }
 
@@ -213,8 +205,8 @@ int initRoot(NODE * root, int nbPos) {
 
 void tp(NODE * root) {
     printf("**********************   Debut :\n");
-    int nbPos = initRoot(root,0);
-    printf("nb pos : %d\n",nbPos);
+    int nbPos = initRoot(root, 0);
+    printf("nb pos : %d\n", nbPos);
     //affichage regexp
     printf("regex : ");
     afficherER(root);
@@ -223,27 +215,27 @@ void tp(NODE * root) {
 
     printf("set Pos \n");
     setPos(root, 1);
-    //afficherDecoration(root);
     printf("set Annulable\n");
     setAnnulable(root);
-    //afficherDecoration(root);
     printf("set PP\n");
     setPDP(root, _PP);
     setPDP(root, _DP);
+    printf("affichage de l'arbre décoré, c'est Noel ! \n");
     afficherDecoration(root);
 
     int i;
     printf("set pos suivante\n");
-    ENS * posSuivante[nbPos];
+    ENS *posSuivante[nbPos];
+//    ENS **posSuivante = (ENS**)malloc(sizeof(ENS*)*nbPos);
     for (i = 0; i < nbPos; i++) {
         posSuivante[i] = creerEnsemble();
     }
-    setPosSuivante(root, &posSuivante);
+    setPosSuivante(root, &posSuivante, nbPos);
 
 
     printf("affichage pos suviante\n");
     for (i = 0; i < nbPos; i++) {
-        printf("posSuivante(%d) : ",i+1);
+        printf("posSuivante(%d) : ", i + 1);
         affichage(posSuivante[i]);
     }
 
