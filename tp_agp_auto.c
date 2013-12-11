@@ -2,6 +2,9 @@
 
 #include "tree_agp.h"
 
+#define _PP 1
+#define _DP 2
+
 void afficherER(NODE *root) {
 
     if (root != NULL) {
@@ -24,6 +27,8 @@ void afficherDecoration(NODE *root) {
         printf("annulable : %d\n", root->annulable);
         printf("PP : ");
         affichage(root->PP);
+        printf("DP : ");
+        affichage(root->DP);
         afficherDecoration(root->fd);
     }
 }
@@ -72,37 +77,63 @@ void setAnnulable(NODE *root) {
     }
 }
 
-void setPPNoeud_var(NODE* noeud, int var) {
-    printf("creation PP pour feuille avec : %d\n", var);
+void setPDPNoeud_var(NODE* noeud, int var, int PorD) {
     ENS ens = creerEnsemble();
     ajoutElem(&ens, var);
-    noeud->PP = ens;
+    if (PorD == _PP)
+        noeud->PP = ens;
+    else
+        noeud->DP = ens;
 }
 
-void setPPNoeud(NODE* noeud, ENS ens1, ENS ens2) {
+void setPDPNoeud(NODE* noeud, NODE* FG, NODE* FD, int PorD) {
     //pas propre ici !
-    if (ens2 == NULL) ens2 = creerEnsemble();
+    if (FD == NULL) FD = (NODE*) malloc(sizeof(NODE));
     ENS ens = creerEnsemble();
+    ENS ens1 = creerEnsemble();
+    ENS ens2 = creerEnsemble();
+
+    if (PorD == _PP) {
+        ens1 = FG->PP;
+        ens2 = FD->PP;
+    } else {
+        ens1 = FG->DP;
+        ens2 = FD->DP;
+    }
+    
+    if (ens2 == NULL) ens2 = creerEnsemble();
+
     ens = unionEns(ens1, ens2);
-    noeud->PP = ens;
+    
+     if (PorD == _PP) {
+        noeud->PP = ens;
+    } else {
+        noeud->DP = ens;
+    }
 }
 
-void setPP(NODE* node) {
+/**
+ * PorD : premiere ou derniere
+ */
+void setPDP(NODE* node, int PorD) {
     if (node != NULL) {
-        setPP(node->fg);
-        setPP(node->fd);
+        setPDP(node->fg, PorD);
+        setPDP(node->fd, PorD);
         if (feuille(node)) {
-            setPPNoeud_var(node, node->position);
+            setPDPNoeud_var(node, node->position, PorD);
         } else if (node->type_node == NODE_OR) {
-            setPPNoeud(node, node->fg->PP, node->fd->PP);
+            setPDPNoeud(node, node->fg, node->fd, PorD);
         } else if (node->type_node == NODE_AND) {
             if (isAnnulable(node->fg)) {
-                setPPNoeud(node, node->fg->PP, node->fd->PP);
+                setPDPNoeud(node, node->fg, node->fd, PorD);
             } else {
-                setPPNoeud(node, node->fg->PP, NULL);
+                if( PorD == _PP )
+                    setPDPNoeud(node, node->fg, NULL, PorD);
+                else
+                    setPDPNoeud(node, node->fd, NULL, PorD);
             }
         } else {
-            setPPNoeud(node, node->fg->PP, NULL);
+            setPDPNoeud(node, node->fg, NULL, PorD);
         }
     }
 
@@ -139,7 +170,8 @@ void tp(NODE *root) {
     setAnnulable(root);
     //afficherDecoration(root);
     printf("set PP\n");
-    setPP(root);
+    setPDP(root, _PP);
+    setPDP(root,_DP);
     afficherDecoration(root);
 
 

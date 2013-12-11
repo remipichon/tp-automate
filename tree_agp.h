@@ -27,6 +27,7 @@ typedef struct node {
     int position; /* position pos */
     int annulable; /* annulable oui :1, non : 0*/
     ENS PP; /* premières positions      */
+    ENS DP; /* premières positions      */
 
 } NODE;
 
