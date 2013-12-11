@@ -165,6 +165,5 @@ int egale(ENS ensemble1, ENS ensemble2) {
     for (i = 0; i < ensemble1->max; i++)
         if (getVal(ensemble1, i) != getVal(ensemble2, i)) return 0;
 
-
     return 1;
 }

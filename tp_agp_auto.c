@@ -108,11 +108,11 @@ void setPDPNoeud(NODE* noeud, NODE* FG, NODE* FD, int PorD) {
 
     ens = unionEns(ens1, ens2);
 
-    if (PorD == _PP) {
+    if (PorD == _PP)
         noeud->PP = ens;
-    } else {
+    else
         noeud->DP = ens;
-    }
+
 }
 
 /**
@@ -135,11 +135,9 @@ void setPDP(NODE* node, int PorD) {
                 else
                     setPDPNoeud(node, node->fd, NULL, PorD);
             }
-        } else {
+        } else
             setPDPNoeud(node, node->fg, NULL, PorD);
-        }
     }
-
 }
 
 void setPosSuivante(NODE* node, ENS** posSuivante, int nbPos) {
@@ -152,7 +150,7 @@ void setPosSuivante(NODE* node, ENS** posSuivante, int nbPos) {
 
         if (node->type_node == NODE_AND) {
             //pour toute les DP de fg
-            for (i = 1; i <= nbPos; i++) { 
+            for (i = 1; i <= nbPos; i++) {
                 if (existeElem(node->fg->DP, i) == 1) {
                     //pour toute les PP de fg
                     for (j = 1; j <= nbPos; j++) {
@@ -164,14 +162,13 @@ void setPosSuivante(NODE* node, ENS** posSuivante, int nbPos) {
                     }
                 }
             }
-
         } else if (node->type_node == NODE_STAR) {
             //pour toute les positions de PremierePose(n)
             for (i = 0; i <= nbPos; i++) {
                 if (existeElem(node->DP, i + 1)) { //i est une position de dernierepos(n)
                     //pour toutes les possitions PP(n)
                     for (j = 0; j <= nbPos; j++) {
-                        if (existeElem(node->PP, j + 1)) { 
+                        if (existeElem(node->PP, j + 1)) {
                             //printf("ajout de %d dans posSuivante(%d)\n", j + 1, i + 1);
                             ajoutElem(&(posSuivante[i]), j + 1);
                         }
@@ -179,12 +176,10 @@ void setPosSuivante(NODE* node, ENS** posSuivante, int nbPos) {
                 }
             }
         }
-
     }
 }
 
 int initRoot(NODE * root, int nbPos) {
-
     if (root != NULL) {
         if (feuille(root)) nbPos++;
         nbPos = initRoot(root->fg, nbPos);
@@ -192,12 +187,35 @@ int initRoot(NODE * root, int nbPos) {
         //init des attributs
         root->PP = creerEnsemble();
     }
-
     return nbPos;
 }
 
+void setDtrans(NODE* root, int *DTrans, ENS **etat, int nbEtat) {
+    int numEtat = 0;
+    int numLettre = 0;
+    //    1. Initialisation : le seul état de Dtrans non marqué est PremièrePos(racine)
+    etat[numEtat] = root->PP;
+    //    2. Tant qu’il existe un état ETAT non marqué faire
+    while () {
+        //    3. Pour chaque position (- la derniere)  faire
+        for each(position - 1 = > pos) {
+            //    4. Soit ENS l’ensemble des PosSuivantes(POS), où POS est une position de ETAT telle que
+            //    la feuille de l’arbre à cette position contient la lettre LETTRE
+            
+            //    5. Si ENS n’est pas vide et ENS nouvel état faire
+            //    6. Ajouter ENS non marqué aux états
+            //    7. Ajouter Dtrans[ETAT,LETTRE]=ENS
+            //    8. Fin si
+            //    9. Si ENS non vide et ENS existe déjà faire
+            //    10. Ajouter Dtrans[ETAT,LETTRE]=ENS
+            //    11. Fin si
+            //    12. Fin pour
+        }
+        //    13. Marquer ETAT
+    }
+    //    14. Fin tant que
 
-
+}
 /*-----------------------------------------------------------------*/
 /*                     POINT D'ENTREE DU TP                        */
 
@@ -207,7 +225,7 @@ void tp(NODE * root) {
     printf("**********************   Debut :\n");
     int nbPos = initRoot(root, 0);
     printf("nb pos : %d\n", nbPos);
-    //affichage regexp
+
     printf("regex : ");
     afficherER(root);
     printf("\n");
@@ -225,8 +243,8 @@ void tp(NODE * root) {
 
     int i;
     printf("set pos suivante\n");
-    ENS *posSuivante[nbPos];
-//    ENS **posSuivante = (ENS**)malloc(sizeof(ENS*)*nbPos);
+    ENS * posSuivante[nbPos];
+    //    ENS **posSuivante = (ENS**)malloc(sizeof(ENS*)*nbPos);
     for (i = 0; i < nbPos; i++) {
         posSuivante[i] = creerEnsemble();
     }
@@ -238,6 +256,12 @@ void tp(NODE * root) {
         printf("posSuivante(%d) : ", i + 1);
         affichage(posSuivante[i]);
     }
+
+    printf("set Dtrans\n");
+    int DTrans[nbPos][20]; //matrice de transition
+    ENS * etat[20]; //tableau associant un etat à un ensemble
+
+    setDtrans(root, DTrans, etat, nbPos);
 
 
 
