@@ -53,14 +53,14 @@ int setPos(NODE *root, int cpt) {
 }
 
 int isAnnulable(NODE* root, int PorD) {
-    
+
     if (PorD == _PP) {
         return root->fg->annulable;
     } else {
         return root->fd->annulable;
     }
-    
-   
+
+
 }
 
 void setAnnulable(NODE *root) {
@@ -212,9 +212,9 @@ void remplirTableauLettres(int existeLettre[26], char *lettres) {
     }
 }
 
-int verifEtatNonMarque(int DTrans[][20], int nbEtat, int indiceEtatMarque) {
+int verifEtatNonMarque(int DTrans[20][4], int nbEtat, int indiceEtatMarque) {
     int i;
-   // printf("verif etat non marque : nb etat :%d \n",nbEtat);
+    // printf("verif etat non marque : nb etat :%d \n",nbEtat);
     for (i = 0; i < nbEtat; i++) {
         if (DTrans[i][indiceEtatMarque] != 1)
             return i;
@@ -230,100 +230,114 @@ int verifPosLettre(char *corresPosLettres, char lettre, int nbPos, int pos) {
 
 }
 
-int addEtat(ENS **etat, ENS ensTemp, int* nbEtat) {
+int addEtat(ENS *etat, ENS ensTemp, int* nbEtat) {
     //printf("nb etat %d\n",*nbEtat);
     int i;
-    
+
     for (i = 0; i<*nbEtat; i++) {
         if (egale(etat[i], ensTemp))
-            return i;
+            return i + 1;
     }
     //sinon faut ajouter l'état
-    etat[(*nbEtat)++] = ensTemp;   //WHOUHOU le ++ est prioritaire sur le * !!!!
+    etat[(*nbEtat)++] = ensTemp; //WHOUHOU le ++ est prioritaire sur le * !!!!
     return *nbEtat;
 }
 
-void marquerEtat(int DTrans[][20], int numEtat, int indiceEtatMarque) {
+void marquerEtat(int DTrans[20][4], int numEtat, int indiceEtatMarque) {
     DTrans[numEtat][indiceEtatMarque] = 1;
 
 }
 
-void printDTrans(int DTrans[][20], int nbCol, int nbLigne) {
+void printDTrans(int DTrans[20][4], int nbLigne, int nbCol) {
     int i, j;
-    for (i = 0; i < nbLigne; i++) {
-        for (j = 0; j < nbCol + 1; j++) {
-            printf("%d ", DTrans[i][j] );
+    //    for (i = 0; i < nbLigne; i++) {
+    for (i = 0; i < 6; i++) {
+        //        for (j = 0; j < nbCol + 1; j++) {
+        for (j = 0; j < 4; j++) {
+            printf("%d ", DTrans[i][j]);
         }
         printf("\n");
 
     }
 }
 
-void printEtat(ENS *etat,int nbEtat){
+void printEtat(ENS *etat, int nbEtat) {
     int i;
-    printf("%d Etat : ",nbEtat);
-    for(i=0;i<nbEtat;i++){
+    printf("%d Etat : ", nbEtat);
+    for (i = 0; i < nbEtat; i++) {
         affichage(etat[i]);
     }
     printf("\n");
 }
 
-void setDtrans(NODE* root, int DTrans[][20], ENS **etat, char *lettres, int nbLettre, ENS **posSuivante, int nbPos, char* corresPosLettres) {
-//    printf("just call \n");
+void setDtrans(NODE* root, int DTrans[20][4], ENS *etat, char *lettres, int nbLettre, ENS *posSuivante, int nbPos, char* corresPosLettres) {
+    //    printf("just call \n");
     int numEtat = 0;
-    int rien;
+    int cptLigneParcours = 0;
     int noColone, pos, indiceEtat, nbEtat = 1;
     ENS ensTemp;
     //	1. Initialisation : le seul état de Dtrans non marqué est PremièrePos(racine)
     etat[numEtat] = root->PP;
-//    printf("before while \n");
+    //    printf("before while \n");
     //	2. Tant qu’il existe un état ETAT non marqué faire
     while ((numEtat = verifEtatNonMarque(DTrans, nbEtat, nbLettre)) != -1) {
-        printf("numEtat à traiter %d \n",numEtat);
+        printf("numEtat à traiter %d \n", numEtat);
         printf("etat[numEtat]");
         affichage(etat[numEtat]);
         printf("traitement...\n");
         //printEtat(etat,nbEtat);
-//        printf("etat (num etat): %d\n", numEtat);
+        //        printf("etat (num etat): %d\n", numEtat);
         //	3. Pour chaque position (- la derniere)  faire
         for (noColone = 0; noColone < nbLettre; noColone++) {
-//            printf("    les lettres : %d => %c \n", noColone, lettres[noColone]);
+            printf("    les lettres : %d => %c \n", noColone, lettres[noColone]);
 
             ensTemp = creerEnsemble();
 
             for (pos = 1; pos <= nbPos; pos++) {
-//                printf("        for pos pos : %d\n", pos);
-//                printf("        ensETAT :");
-                //affichage(etat[numEtat]); //bon !
+                // printf("        for pos pos : %d\n", pos);
+                //printf("        ensETAT :");
+                //affichage(etat[numEtat]); 
                 if (existeElem(etat[numEtat], pos)) {
-//                    printf("            val %d de l'ensemble ETAT no %d\n", pos, numEtat);
+                    printf("            val %d de l'ensemble ETAT no %d\n", pos, numEtat);
                     //pour chaque pos de ETAT
-                    if (verifPosLettre(corresPosLettres, lettres[noColone], nbPos, pos) == 1) { //	la feuille de l’arbre à cette position contient la lettre LETTRE
+                    if (verifPosLettre(corresPosLettres, lettres[noColone], nbPos, pos)) { //	la feuille de l’arbre à cette position contient la lettre LETTRE
                         //4. Soit ENS l’ensemble des PosSuivantes(POS), où POS est une position de ETAT telle que  
-                        //printf("                posSuivante[%d]\n                ",pos-1);
+                        printf("  verif :         posSuivante[%d] :               ", pos - 1);
+                        affichage(posSuivante[pos - 1]);
                         //affichage(posSuivante[pos-1]);
-                        ensTemp = unionEns(ensTemp, posSuivante[pos-1]);
-                        //printf("                verif pos lettre\n");
-                        //printf("                ensTemp %d\n",&ensTemp);
-                        //affichage(ensTemp);
+                        ensTemp = unionEns(ensTemp, posSuivante[pos - 1]);
+
+                        printf("                ensTemp %d\n", &ensTemp);
+                        affichage(ensTemp);
                     }
                 }
             }
 
             //verifier si l'union ensTemp existe dans ENS* etat
-            indiceEtat = addEtat(etat, ensTemp, &nbEtat); // si etat n'existe pas, on l'ajoute - getIndice
+            //l'ensemble vide ne fait pas parti des etats
+            if( !isEmpty(ensTemp) )      {      
+                 indiceEtat = addEtat(etat, ensTemp, &nbEtat); // si etat n'existe pas, on l'ajoute - getIndice
             //printf("indice etat : %d\n",indiceEtat);
             DTrans[numEtat][noColone] = indiceEtat; //DTrans[numEtat][noColone] = indice    
+            }
+
+            printf("Dtrans\n");
+            printDTrans(DTrans, 10, nbLettre);
 
         }
         marquerEtat(DTrans, numEtat, nbLettre);
-       printf("Dtrans\n");
-       printDTrans(DTrans, nbLettre, nbEtat);
-       printf("..fin traitement\n\n\n\n\n");
-       //printEtat(etat,nbEtat);
-       //printf("\n\n\n\n");
-       //break;
+        printf("Dtrans\n");
+        printDTrans(DTrans, 10, nbLettre);
+        printf("..fin traitement\n\n\n\n\n");
+        //printEtat(etat,nbEtat);
+        //printf("\n\n\n\n");
+        //break;
+
+        cptLigneParcours++;
+        //if( cptLigneParcours == 2   ) break;
     }
+
+
 
 
 }
@@ -370,21 +384,25 @@ void tp(NODE * root) {
     }
     setPosSuivante(root, posSuivante, nbPos);
 
-/*
-    printf("affichage pos suviante\n");    
-    for (i = 0; i < nbPos; i++) {
-        printf("posSuivante(%d) : ", i + 1);
-        affichage(posSuivante[i]);
-    }
- */ 
-     
+    /*
+        printf("affichage pos suviante\n");    
+        for (i = 0; i < nbPos; i++) {
+            printf("posSuivante(%d) : ", i + 1);
+            affichage(posSuivante[i]);
+        }
+     */
+
 
 
     int j;
-    int DTrans[20][nbLettresExistantes + 1]; //matrice de transition
+    //    int DTrans[20][nbLettresExistantes + 1]; //matrice de transition
+    int DTrans[20][4]; //matrice de transition
     for (i = 0; i < 20; i++)
-        for (j = 0; j < nbLettresExistantes + 1; j++)
+        //        for (j = 0; j < nbLettresExistantes + 1; j++)
+        for (j = 0; j < 4; j++)
             DTrans[i][j] = 0;
+
+    printDTrans(DTrans, 20, nbLettresExistantes + 1); //putain de probleme d'affichage
 
 
     char lettres[nbLettresExistantes];
@@ -403,9 +421,12 @@ void tp(NODE * root) {
      */
 
 
-    ENS * etat[20]; //tableau associant un etat à un ensemble
-    printf("set Dtrans avec nb lettre %d\n",nbLettresExistantes);
+    ENS etat[20]; //tableau associant un etat à un ensemble
+    printf("set Dtrans avec nb lettre %d\n", nbLettresExistantes);
     setDtrans(root, DTrans, etat, lettres, nbLettresExistantes, posSuivante, nbPos, corresPosLettres);
+
+    printf("\n\n\n\nTable de transition\n");
+    printDTrans(DTrans, 5, 4);
 
 
 }
