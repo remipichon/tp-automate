@@ -22,7 +22,7 @@ int getVal(ENS ensemble, int index) {
     if (0 <= index && index < ensemble->max)
         return ensemble->tab[index];
     printf("sortie de la capacité du tableau de ENS en get (indice demandé : %d, max : %d\n", index, ensemble->max);
-    exit(-1);
+    //exit(-1);
     return -1;
 }
 
@@ -39,7 +39,7 @@ int setVal(ENS ensemble, int index, int val) {
         return 1;
     }
     printf("sortie de la capacité du tableau de ENS en set (indice demandé : %d, max : %d\n", index, ensemble->max);
-    exit(-1);
+    //exit(-1);
     return -1;
 }
 

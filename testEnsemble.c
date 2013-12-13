@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
         else scanf("%d est ajouté - ", i);
     }
 
-    scanf("\n******************test affichage (0 à 10)****************** \n");
+    scanf("\n******************test affichage (1 à 10)****************** \n");
     affichage(ens1);
     scanf("affichage OK\n");
 
