@@ -70,6 +70,7 @@ ENS unionEns(const ENS ensemble1, const ENS ensemble2);
 int egale(ENS ensemble1, ENS ensemble2);
 
 
+int isEmpty(ENS ensemble);
 
 
 /**

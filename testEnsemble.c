@@ -28,6 +28,8 @@ int main(int argc, char** argv) {
         while (!ajoutElem(&ens1, i)) scanf("%d n'est pas ajouté - ", i);
         else scanf("%d est ajouté - ", i);
     }
+     scanf("\n******************test isEmpty*****************\n");
+    scanf("  0 => %d\n",isEmpty(ens1));
 
     scanf("\n******************test affichage (1 à 10)****************** \n");
     affichage(ens1);
@@ -47,8 +49,10 @@ int main(int argc, char** argv) {
     i = 5;
     scanf("\n existe OK \n");
 
-    scanf("\n******************test union******************\n");
     ens2 = creerEnsemble();
+    scanf("\n******************test isEmpty*****************\n");
+    scanf("  1 => %d\n",isEmpty(ens2));
+    scanf("\n******************test union******************\n");    
     scanf("avec un ensemble vide\n");
     ensUnion = unionEns(ens1, ens2);
     affichage(ensUnion);
