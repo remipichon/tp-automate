@@ -433,14 +433,14 @@ void setDtrans(NODE* root, int DTrans[20][4], ENS *etat, char *lettres, int nbLe
         //	3. Pour chaque position (- la derniere)  faire
         for (noColone = 0; noColone < nbLettre; noColone++) {
             ensTemp = creerEnsemble();
-            for (pos = 1; pos <= nbPos; pos++) 
-                if (existeElem(etat[numEtat], pos)) 
+            for (pos = 1; pos <= nbPos; pos++)
+                if (existeElem(etat[numEtat], pos))
                     //pour chaque pos de ETAT
-                    if (verifPosLettre(corresPosLettres, lettres[noColone], pos))  //	la feuille de l’arbre à cette position contient la lettre LETTRE
+                    if (verifPosLettre(corresPosLettres, lettres[noColone], pos)) //	la feuille de l’arbre à cette position contient la lettre LETTRE
                         //4. Soit ENS l’ensemble des PosSuivantes(POS), où POS est une position de ETAT telle que  
                         ensTemp = unionEns(ensTemp, posSuivante[pos - 1]);
-                
-                
+
+
             //verifier si l'union ensTemp existe dans ENS* etat
             //l'ensemble vide ne fait pas parti des etats
             if (!isEmpty(ensTemp)) {
@@ -467,78 +467,63 @@ void tp(NODE * root) {
     for (i = 0; i < 26; i++)
         existeLettre[i] = 0;
     int nbPos = initRoot(root, 0, existeLettre, &nbLettresExistantes); //init tableau lettres aussi
-    char corresPosLettres[] = {'a', 'b', 'a', 'b', 'c'};
+    char corresPosLettres[] = {'a', 'b', 'a', 'b', 'c'}; //TODO via de l'algo)
 
 
-
-    printf("nb pos : %d\n", nbPos);
 
     printf("regex : ");
     afficherER(root);
     printf("\n");
 
 
-    printf("set Pos \n");
+    printf("set Pos..\n");
     setPos(root, 1);
-    printf("set Annulable\n");
+    printf("set Annulable..\n");
     setAnnulable(root);
-    printf("set PP\n");
+    printf("set PP..\n");
     setPDP(root, _PP);
+    printf("set DP ..\n");
     setPDP(root, _DP);
-    printf("affichage de l'arbre décoré, c'est Noel ! \n");
-    //afficherDecoration(root);
+    printf("affichage de l'arbre décoré (via un parcours postfixe), c'est Noel ! \n");
+    afficherDecoration(root);
 
-    printf("set pos suivante\n");
-    ENS posSuivante[nbPos];
-    //	ENS **posSuivante = (ENS**)malloc(sizeof(ENS*)*nbPos);
+    printf("set pos suivante..\n");
+    ENS posSuivante[nbPos]; //TODO en dynamique
     for (i = 0; i < nbPos; i++) {
         posSuivante[i] = creerEnsemble();
     }
     setPosSuivante(root, posSuivante, nbPos);
 
-    /*
-        printf("affichage pos suviante\n");    
-        for (i = 0; i < nbPos; i++) {
-            printf("posSuivante(%d) : ", i + 1);
-            affichage(posSuivante[i]);
-        }
-     */
+
+    printf("affichage pos suviante\n");
+    for (i = 0; i < nbPos; i++) {
+        printf("posSuivante(%d) : ", i + 1);
+        affichage(posSuivante[i]);
+    }
+    printf("\n");
+
 
 
 
     int j;
     //    int DTrans[20][nbLettresExistantes + 1]; //matrice de transition
-    int DTrans[20][4]; //matrice de transition
+    int DTrans[20][4]; //matrice de transition  //TODO en dynamique
     for (i = 0; i < 20; i++)
-        //        for (j = 0; j < nbLettresExistantes + 1; j++)
         for (j = 0; j < 4; j++)
             DTrans[i][j] = 0;
 
-    printDTrans(DTrans, 20, nbLettresExistantes + 1); //putain de probleme d'affichage
+    //printDTrans(DTrans, 20, nbLettresExistantes + 1); //putain de probleme d'affichage
 
 
     char lettres[nbLettresExistantes];
     remplirTableauLettres(existeLettre, lettres);
 
-    /*
-    printf("affichage des lettres existantes de l'expre reguliere\n");
-    for (i = 0; i < 26; i++)
-        printf("%d ", existeLettre[i]);
-    printf("\n");
-
-    printf("affichage des %d lettres de l'expre reguliere\n", nbLettresExistantes);
-    for (i = 0; i < nbLettresExistantes; i++)
-        printf("%c ", lettres[i]);
-    printf("\n");
-     */
-
-
-    ENS etat[20]; //tableau associant un etat à un ensemble
-    printf("set Dtrans avec nb lettre %d\n", nbLettresExistantes);
+    ENS etat[20]; //tableau associant un etat à un ensemble //TODO overcapacity
+    printf("set Dtrans..\n");
     setDtrans(root, DTrans, etat, lettres, nbLettresExistantes, posSuivante, nbPos, corresPosLettres);
 
     printf("\n\n\n\nTable de transition\n");
-    printDTrans(DTrans, 5, 4);
+    printDTrans(DTrans, 5, 4);  //TODO en dynamique, n'afficher que les etats qu'il faut (nbEtat)
 
 
 }
