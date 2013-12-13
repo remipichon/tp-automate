@@ -168,7 +168,6 @@ int egale(ENS ensemble1, ENS ensemble2) {
     return 1;
 }
 
-
 int isEmpty(ENS ensemble){
     int i;
     for( i=1; i<=ensemble->max;i++){

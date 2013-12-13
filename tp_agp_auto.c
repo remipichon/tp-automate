@@ -6,8 +6,14 @@
 #define _PP 1
 #define _DP 2
 
-void afficherER(NODE *root) {
+/********************************************************/
+/***************** fonction pour le debug **************/
 
+/**
+ * afficher une expression regulière à partir d'un arbre (parcours infixe)
+ * @param root
+ */
+void afficherER(NODE *root) {
     if (root != NULL) {
         if (root->fg != NULL && root->fd != NULL)
             printf("(");
@@ -19,6 +25,14 @@ void afficherER(NODE *root) {
     }
 }
 
+/**
+ * affiche l'arbre décodé :
+ *      positions
+ *      annulable
+ *      premières positions
+ *      dernieres positions
+ * @param root
+ */
 void afficherDecoration(NODE *root) {
 
     if (root != NULL) {
@@ -34,24 +48,26 @@ void afficherDecoration(NODE *root) {
     }
 }
 
+
+/*****************fin fonction pour le debug **************/
+/********************************************************/
+
+/**
+ * determine si un noeud est une feuille ou non
+ * @param root
+ * @return 1 si feuille, 0 sinon
+ */
 int feuille(NODE *root) {
-    if (root->fd == NULL && root->fg == NULL
-            && root->type_node != NODE_STAR //KIKI pas sur de son utilité !
-            ) return 1;
+    if (root->fd == NULL && root->fg == NULL) return 1;
     return 0;
 }
 
-int setPos(NODE *root, int cpt) {
-    if (root != NULL) {
-        cpt = setPos(root->fg, cpt);
-
-        cpt = setPos(root->fd, cpt);
-
-        if (feuille(root)) root->position = cpt++;
-    }
-    return cpt;
-}
-
+/**
+ * determine si un noeud est annulable ou non
+ * @param root
+ * @param PorD
+ * @return 1 si anulable, 0 sinon
+ */
 int isAnnulable(NODE* root, int PorD) {
 
     if (PorD == _PP) {
@@ -63,6 +79,53 @@ int isAnnulable(NODE* root, int PorD) {
 
 }
 
+int initRoot(NODE * root, int nbPos, int existeLettre[26], int *nbLettresExistantes) {
+    if (root != NULL) {
+        if (feuille(root)) {
+            nbPos++;
+            if (existeLettre[root->var - 'a'] == 0) {
+                existeLettre[root->var - 'a'] = 1;
+                (*nbLettresExistantes)++;
+            }
+        }
+        nbPos = initRoot(root->fg, nbPos, existeLettre, nbLettresExistantes);
+        nbPos = initRoot(root->fd, nbPos, existeLettre, nbLettresExistantes);
+        //init des attributs
+        root->PP = creerEnsemble();
+        root->DP = creerEnsemble();
+    }
+    return nbPos;
+}
+
+
+/********************************************************/
+/***************** decoration de l'abre ****************/
+/* dans l'ordre d'appel, determination de :
+ * positions
+ * annulable
+ * premiere position
+ * derniere position 
+ */
+
+/**
+ * determine pour chaque noeud sa position, valable uniquement pour les feuilles
+ * @param root
+ * @param cpt
+ * @return 
+ */
+int setPos(NODE *root, int cpt) {
+    if (root != NULL) {
+        cpt = setPos(root->fg, cpt);
+        cpt = setPos(root->fd, cpt);
+        if (feuille(root)) root->position = cpt++;
+    }
+    return cpt;
+}
+
+/**
+ * determine le caractère annulable de chaque noeud (parcours postfixe)
+ * @param root
+ */
 void setAnnulable(NODE *root) {
     if (root != NULL) {
         setAnnulable(root->fg);
@@ -87,18 +150,44 @@ void setAnnulable(NODE *root) {
     }
 }
 
+/**** premieres et dernieres positions  *****/
+/*
+ * Dans la mesure ou l'algo est très proche pour les deux traitements, une seule
+ * fonction setPDP(NODE, int PorD) permet d'effectuer premieres et dernieres 
+ * positions. Le flag PorD (premiereOrDerniere) permet, à l'appel, de determiner
+ * quel traitement est effectué. Les fonctions setPDPNoeud_var et setPDPNoeud
+ * sont appelées par setPDP avec le flag et ce sont elles qui determinent si il
+ * faut renseingner l'ensemble PP ou DP du noeud (entre autre).
+ */
+
+/**
+ * cas feuille, on ajoute un position dans l'ensemble (PP ou DP)
+ * @param noeud
+ * @param var : position à ajouter
+ * @param PorD
+ */
 void setPDPNoeud_var(NODE* noeud, int var, int PorD) {
     ENS ens = creerEnsemble();
     ajoutElem(&ens, var);
-    if (PorD == _PP)
+    if (PorD == _PP) // si PorD = PremierePosition, on traite l'ensemble PP (premiere position)
         noeud->PP = ens;
     else
         noeud->DP = ens;
 }
 
+/**
+ * fait l'union des ensembles du fils gauche et du fils droit pour le stocker 
+ * dans l'ensemble du noeud. PorD permet de determiner si on traite PP ou DP. 
+ * prend également en charge le cas ou FD est null recquis par NODE_STAR qui n'a
+ * pas de fils droit.
+ * @param noeud
+ * @param FG noeud fils gauche
+ * @param FD noeuf fils droit
+ * @param PorD premiereOrDerniere
+ */
 void setPDPNoeud(NODE* noeud, NODE* FG, NODE* FD, int PorD) {
     //pas propre ici !
-    if (FD == NULL) FD = (NODE*) malloc(sizeof (NODE));
+    if (FD == NULL) FD = (NODE*) malloc(sizeof (NODE)); //call by NODE_STAR
     ENS ens = creerEnsemble();
     ENS ens1 = creerEnsemble();
     ENS ens2 = creerEnsemble();
@@ -111,7 +200,7 @@ void setPDPNoeud(NODE* noeud, NODE* FG, NODE* FD, int PorD) {
         ens2 = FD->DP;
     }
 
-    if (ens2 == NULL) ens2 = creerEnsemble();
+    if (ens2 == NULL) ens2 = creerEnsemble(); //cas NODE_STAR
 
     ens = unionEns(ens1, ens2);
 
@@ -123,13 +212,17 @@ void setPDPNoeud(NODE* noeud, NODE* FG, NODE* FD, int PorD) {
 }
 
 /**
- * PorD : premiere ou derniere
+ * determine l'ensemble des premieres/dernieres positions pour chaque noeud via 
+ * un parcours postfixe
+ * @param node
+ * @param PorD : PremiereOrDerniere : _PP (premiere position) ou bien _DP 
+ * (derniere position)
  */
 void setPDP(NODE* node, int PorD) {
     if (node != NULL) {
         setPDP(node->fg, PorD);
         setPDP(node->fd, PorD);
-        if (feuille(node)) {
+        if (feuille(node)) { //une feuille ne contient que sa propre postion PP DP
             setPDPNoeud_var(node, node->position, PorD);
         } else if (node->type_node == NODE_OR) {
             setPDPNoeud(node, node->fg, node->fd, PorD);
@@ -137,33 +230,45 @@ void setPDP(NODE* node, int PorD) {
             if (isAnnulable(node, PorD)) {
                 setPDPNoeud(node, node->fg, node->fd, PorD);
             } else {
+                //cas différent entre PP et DP
                 if (PorD == _PP)
-                    setPDPNoeud(node, node->fg, NULL, PorD);
+                    setPDPNoeud(node, node->fg, NULL, PorD); //union avec fils gauche
                 else
-                    setPDPNoeud(node, node->fd, NULL, PorD);
+                    setPDPNoeud(node, node->fd, NULL, PorD); //union avec fils droit
             }
-        } else
+        } else //cas NODE_STAR
             setPDPNoeud(node, node->fg, NULL, PorD);
     }
 }
 
+
+/********************************************************/
+/****** resolution de la table des transitions***********/
+
+/**
+ * determine le tableaux des positions suivantes, parcours postfixe
+ * @param node
+ * @param posSuivante : tableau des ensembles des positions suivantes pour
+ * chaque position 
+ * @param nbPos : nombre position, taille de posSuivante
+ */
 void setPosSuivante(NODE* node, ENS *posSuivante, int nbPos) {
     int i, j;
-
     if (node != NULL && feuille(node) == 0) {
 
+        //reccursivité
         setPosSuivante(node->fg, posSuivante, nbPos);
-        if (node->type_node != NODE_STAR) setPosSuivante(node->fd, posSuivante, nbPos); //parce qu'un star n'a pas de fils droit
+        if (node->type_node != NODE_STAR)
+            setPosSuivante(node->fd, posSuivante, nbPos); //parce qu'un star n'a pas de fils droit
 
         if (node->type_node == NODE_AND && node->fg->var != '#') {
-            //pour toute les DP de fg
+            //pour toute les DernieresPositions de filsGauche
             for (i = 1; i <= nbPos; i++) {
                 if (existeElem(node->fg->DP, i) == 1) {
-                    //pour toute les PP de fg
+                    //pour toute les PpremieresPositions de filsGauche
                     for (j = 1; j <= nbPos; j++) {
                         if (existeElem(node->fd->PP, j)) {
                             //on ajoute la position j dans la possuivante de i
-                            //printf("ajout de %d dans posSuivante(%d)\n", j, i);
                             ajoutElem(&posSuivante[i - 1], j);
                         }
                     }
@@ -176,7 +281,6 @@ void setPosSuivante(NODE* node, ENS *posSuivante, int nbPos) {
                     //pour toutes les possitions PP(n)
                     for (j = 0; j <= nbPos; j++) {
                         if (existeElem(node->PP, j + 1)) {
-                            //printf("ajout de %d dans posSuivante(%d)\n", j + 1, i + 1);
                             ajoutElem(&posSuivante[i], j + 1);
                         }
                     }
@@ -186,23 +290,29 @@ void setPosSuivante(NODE* node, ENS *posSuivante, int nbPos) {
     }
 }
 
-int initRoot(NODE * root, int nbPos, int existeLettre[26], int *nbLettresExistantes) {
-    if (root != NULL) {
-        if (feuille(root)) {
-            nbPos++;
-            if (existeLettre[root->var - 'a'] == 0) {
-                existeLettre[root->var - 'a'] = 1;
-                (*nbLettresExistantes)++;
-            }
-        }
-        nbPos = initRoot(root->fg, nbPos, existeLettre, nbLettresExistantes);
-        nbPos = initRoot(root->fd, nbPos, existeLettre, nbLettresExistantes);
-        //init des attributs
-        root->PP = creerEnsemble();
-    }
-    return nbPos;
-}
+/*****   fonction pour algo de determination de la table des transtions  ****/
+/*
+ * les méthodes/fonctions ci dessous sont utiliser par DTrans qui a besoin de 
+ * nombreux tableaux
+ * 
+ * int DTrans[20][4]    matrice de la table des transtions, contient les indices 
+ * des différents états présents dans 
+ * ENS *etat            tableau de chaque états (stockés dans des ENSemble) 
+ * char *lettres        tableau des lettres présentes dans le regex (sans doublons)
+ * int nbLettre         nb de lettre dans char *lettres
+ * ENS *posSuivante     tableau des positions suivantes, posSuivante[i] = ENSsemble
+ * int nbPos            nb de positions dans posSuivante (nb de positions tout court)
+ * char* corresPosLettres
+ *                      correspondance entre les positions et les lettres dans les
+ *              feuilles de l'arbre (taille = nbPos)
+ */
 
+/**
+ * recupere toutes les lettres du regex dans un tableau temporaire existeLettre 
+ * (qui contient donc des 'trous'
+ * @param existeLettre : tableau de 26 cases, une case par lettre de l'alphabet
+ * @param lettres
+ */
 void remplirTableauLettres(int existeLettre[26], char *lettres) {
     int i, j = 0;
     for (i = 0; i < 26; i++) {
@@ -212,6 +322,16 @@ void remplirTableauLettres(int existeLettre[26], char *lettres) {
     }
 }
 
+/**
+ * passe en revue tous les etats (lignes) de DTrans pour vérifier s'il reste des
+ * états à traiter, si c'est le cas, renvoit l'indice de l'état dans DTrans
+ * @param DTrans
+ * @param nbEtat
+ * @param indiceEtatMarque  : postion de le colonne des etats marqués dans DTrans 
+ *      (situé à nbLettre +1 (juste après les collones de lettre -1 pour avoir un
+ *      indice de tableau)
+ * @return 
+ */
 int verifEtatNonMarque(int DTrans[20][4], int nbEtat, int indiceEtatMarque) {
     int i;
     // printf("verif etat non marque : nb etat :%d \n",nbEtat);
@@ -222,45 +342,71 @@ int verifEtatNonMarque(int DTrans[20][4], int nbEtat, int indiceEtatMarque) {
     return -1;
 }
 
-int verifPosLettre(char *corresPosLettres, char lettre, int nbPos, int pos) {
-    nbPos++; //pour eviter d'avoir un warnig
+/**
+ * verifie si la position (feuille de l'arbre) comprend la lettre
+ * @param corresPosLettres
+ * @param lettre        lettre des collones de DTrans
+ * @param pos           positions 
+ * @return 
+ */
+int verifPosLettre(char *corresPosLettres, char lettre, int pos) {
     if (corresPosLettres[pos - 1] == lettre)
         return 1;
     return 0;
 
 }
 
+/**
+ * ajouter dans les états l'état temporaire que si pas déja présent et renvoit
+ * l'indice du nouveau etat dans le tableau des états, si déja présent, renvoit
+ * juste l'indice de l'état dans le tableau des états
+ * @param etat          tableau des etats
+ * @param ensTemp       ensemble à eventuellement ajouter
+ * @param nbEtat        nb case de tableau des etats
+ * @return 
+ */
 int addEtat(ENS *etat, ENS ensTemp, int* nbEtat) {
-    //printf("nb etat %d\n",*nbEtat);
     int i;
-
     for (i = 0; i<*nbEtat; i++) {
-        if (egale(etat[i], ensTemp))
+        if (egale(etat[i], ensTemp)) //etat déja existant
             return i + 1;
     }
     //sinon faut ajouter l'état
-    etat[(*nbEtat)++] = ensTemp; //WHOUHOU le ++ est prioritaire sur le * !!!!
+    etat[(*nbEtat)++] = ensTemp; //le ++ est prioritaire sur le * !!!!
     return *nbEtat;
 }
 
+/**
+ * passe à état à terminé
+ * @param DTrans
+ * @param numEtat
+ * @param indiceEtatMarque
+ */
 void marquerEtat(int DTrans[20][4], int numEtat, int indiceEtatMarque) {
     DTrans[numEtat][indiceEtatMarque] = 1;
-
 }
 
+/**
+ * debug : affiche la table des transitions
+ * @param DTrans
+ * @param nbLigne
+ * @param nbCol
+ */
 void printDTrans(int DTrans[20][4], int nbLigne, int nbCol) {
     int i, j;
-    //    for (i = 0; i < nbLigne; i++) {
     for (i = 0; i < 6; i++) {
-        //        for (j = 0; j < nbCol + 1; j++) {
-        for (j = 0; j < 4; j++) {
+        for (j = 0; j < 4; j++)
             printf("%d ", DTrans[i][j]);
-        }
         printf("\n");
 
     }
 }
 
+/**
+ * debug : affiche le tableau des états 
+ * @param etat
+ * @param nbEtat
+ */
 void printEtat(ENS *etat, int nbEtat) {
     int i;
     printf("%d Etat : ", nbEtat);
@@ -270,76 +416,42 @@ void printEtat(ENS *etat, int nbEtat) {
     printf("\n");
 }
 
+/**
+ * determine la table des transitions 
+ * (pour les arguments, voir commentaires plus
+ * haut)
+ */
 void setDtrans(NODE* root, int DTrans[20][4], ENS *etat, char *lettres, int nbLettre, ENS *posSuivante, int nbPos, char* corresPosLettres) {
-    //    printf("just call \n");
     int numEtat = 0;
     int cptLigneParcours = 0;
     int noColone, pos, indiceEtat, nbEtat = 1;
     ENS ensTemp;
     //	1. Initialisation : le seul état de Dtrans non marqué est PremièrePos(racine)
     etat[numEtat] = root->PP;
-    //    printf("before while \n");
     //	2. Tant qu’il existe un état ETAT non marqué faire
     while ((numEtat = verifEtatNonMarque(DTrans, nbEtat, nbLettre)) != -1) {
-        printf("numEtat à traiter %d \n", numEtat);
-        printf("etat[numEtat]");
-        affichage(etat[numEtat]);
-        printf("traitement...\n");
-        //printEtat(etat,nbEtat);
-        //        printf("etat (num etat): %d\n", numEtat);
         //	3. Pour chaque position (- la derniere)  faire
         for (noColone = 0; noColone < nbLettre; noColone++) {
-            printf("    les lettres : %d => %c \n", noColone, lettres[noColone]);
-
             ensTemp = creerEnsemble();
-
-            for (pos = 1; pos <= nbPos; pos++) {
-                // printf("        for pos pos : %d\n", pos);
-                //printf("        ensETAT :");
-                //affichage(etat[numEtat]); 
-                if (existeElem(etat[numEtat], pos)) {
-                    printf("            val %d de l'ensemble ETAT no %d\n", pos, numEtat);
+            for (pos = 1; pos <= nbPos; pos++) 
+                if (existeElem(etat[numEtat], pos)) 
                     //pour chaque pos de ETAT
-                    if (verifPosLettre(corresPosLettres, lettres[noColone], nbPos, pos)) { //	la feuille de l’arbre à cette position contient la lettre LETTRE
+                    if (verifPosLettre(corresPosLettres, lettres[noColone], pos))  //	la feuille de l’arbre à cette position contient la lettre LETTRE
                         //4. Soit ENS l’ensemble des PosSuivantes(POS), où POS est une position de ETAT telle que  
-                        printf("  verif :         posSuivante[%d] :               ", pos - 1);
-                        affichage(posSuivante[pos - 1]);
-                        //affichage(posSuivante[pos-1]);
                         ensTemp = unionEns(ensTemp, posSuivante[pos - 1]);
-
-                        printf("                ensTemp %d\n", &ensTemp);
-                        affichage(ensTemp);
-                    }
-                }
-            }
-
+                
+                
             //verifier si l'union ensTemp existe dans ENS* etat
             //l'ensemble vide ne fait pas parti des etats
-            if( !isEmpty(ensTemp) )      {      
-                 indiceEtat = addEtat(etat, ensTemp, &nbEtat); // si etat n'existe pas, on l'ajoute - getIndice
-            //printf("indice etat : %d\n",indiceEtat);
-            DTrans[numEtat][noColone] = indiceEtat; //DTrans[numEtat][noColone] = indice    
+            if (!isEmpty(ensTemp)) {
+                indiceEtat = addEtat(etat, ensTemp, &nbEtat); // si etat n'existe pas, on l'ajoute - getIndice
+                DTrans[numEtat][noColone] = indiceEtat; //DTrans[numEtat][noColone] = indice    
             }
-
-            printf("Dtrans\n");
-            printDTrans(DTrans, 10, nbLettre);
 
         }
         marquerEtat(DTrans, numEtat, nbLettre);
-        printf("Dtrans\n");
-        printDTrans(DTrans, 10, nbLettre);
-        printf("..fin traitement\n\n\n\n\n");
-        //printEtat(etat,nbEtat);
-        //printf("\n\n\n\n");
-        //break;
-
         cptLigneParcours++;
-        //if( cptLigneParcours == 2   ) break;
     }
-
-
-
-
 }
 
 
