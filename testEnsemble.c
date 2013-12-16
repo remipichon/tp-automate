@@ -1,6 +1,6 @@
 /* 
  * File:   testEnsemble.c
- * Author: Kiki
+ * Author: Remi Pichon
  *
  * Created on 9 décembre 2013, 17:13
  */

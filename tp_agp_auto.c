@@ -1,3 +1,11 @@
+/* 
+ * File:   ensemble.c
+ * Author: Remi Pichon
+ *
+ * Created on 9 décembre 2013, 17:59
+ */
+
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -455,6 +463,75 @@ void setDtrans(NODE* root, int DTrans[20][4], ENS *etat, char *lettres, int nbLe
 }
 
 
+/********************************************************/
+/****** ecriture du fichier c ***********/
+
+
+int setAcceptation(int *tableauAcceptation, ENS *etat, int nbEtat, int nbPos){
+    int nbAcceptation = 0;
+    int i;
+    for(i = 0; i < nbEtat ; i++ ){
+        affichage(etat[i]);
+        if( existeElem(etat[i], nbPos) ){ //si diese present dans l'état, c'est un etat d'acceptation
+            tableauAcceptation[nbAcceptation++] = i;
+            
+        }
+    }
+    
+    return nbAcceptation;
+    
+    
+}
+
+
+
+void ecrireFichier(int Dtrans[20][4], int* tableauAcceptation, int nbEetat, int nbEtatAffectation) {
+    int i, j;
+    FILE *f;
+    //on copie la "tÃªte" du fichier
+    system("cat automate_head.c > monautomate.c");
+    //puis on l'ouvre en Ã©criture avec le curseur de flux Ã  la fin
+    f = fopen("monautomate.c", "a");
+
+    //on ecrit les Ã©tats d'acceptation
+    for (i = 0; i < nbEtatAffectation; i++) {
+        //if (tableauAcceptation[i] == 1)
+            fprintf(f, "\nstatus_etat[%d]=ACCEPTATION;\n", tableauAcceptation[i]);
+    }
+    fprintf(f, "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
+            "}",
+            "/*----------------------------------------------------------------------*/",
+            "void construire_transition()",
+            "{",
+            " int i,j;",
+            "",
+            " /* Par defaut, toutes les transitions sont interdites */",
+            " for(i=0;i<MAX_ETAT;i++)",
+            " for(j=0;j<26;j++)",
+            " transition[i][j]=-1;",
+            "",
+            " /* On ajoute Ã  la main les transitions */",
+            " /* Note : a=0, b=1, ..., z=25 */",
+            "");
+    //puis les Transitions
+    for (i = 0; i < nbEetat; i++) {
+        for (j = 0; j < 3; j++) {
+            if (Dtrans[i][j] != 0) {
+                fprintf(f, " /* transition %d lettre %c %d */\n", i, j + 97, Dtrans[i][j]);
+                fprintf(f, " transition[%d][%d]=%d;\n", i, j, Dtrans[i][j]-1);  //car je n'ai pas d'état 0 !!
+            }
+        }
+    }
+    fclose(f); //on le referme une fois l'Ã©criture dynamique finie
+    //et on fini d'Ã©crire la partie statique
+    system("cat automate_tail.c >> monautomate.c");
+}
+
+
+
+
+
+
 /*-----------------------------------------------------------------*/
 /*                 	POINT D'ENTREE DU TP                    	*/
 
@@ -467,7 +544,7 @@ void tp(NODE * root) {
     for (i = 0; i < 26; i++)
         existeLettre[i] = 0;
     int nbPos = initRoot(root, 0, existeLettre, &nbLettresExistantes); //init tableau lettres aussi
-    char corresPosLettres[] = {'a', 'b', 'a', 'b', 'c'}; //TODO via de l'algo)
+    char corresPosLettres[] = {'a', 'b', 'a', 'b', 'c','#'}; //TODO via de l'algo)
 
 
 
@@ -518,13 +595,30 @@ void tp(NODE * root) {
     char lettres[nbLettresExistantes];
     remplirTableauLettres(existeLettre, lettres);
 
+    int nbEtat = 4;
+    
     ENS etat[20]; //tableau associant un etat à un ensemble //TODO overcapacity
     printf("set Dtrans..\n");
     setDtrans(root, DTrans, etat, lettres, nbLettresExistantes, posSuivante, nbPos, corresPosLettres);
 
-    printf("\n\n\n\nTable de transition\n");
-    printDTrans(DTrans, 5, 4);  //TODO en dynamique, n'afficher que les etats qu'il faut (nbEtat)
-
+    printf("\n\n\nTable de transition\n");
+    printDTrans(DTrans, nbEtat, 4); //TODO en dynamique, n'afficher que les etats qu'il faut (nbEtat)
+    
+    printf("set tableauAcception...\n");
+    int tableauAcceptation[nbEtat]; //au plus, nbEtat d'acceptation
+    
+    int nbAcceptation = setAcceptation(tableauAcceptation, etat, nbEtat, nbPos);
+    
+    printf("Etat d'acceptation : \n"); 
+    for( i=0; i < nbAcceptation; i++ )
+        affichage(etat[tableauAcceptation[i]]);
+    
+    printf("write output file...\n");
+    ecrireFichier(DTrans, tableauAcceptation, nbEtat+1, nbAcceptation);
+    
+    
+    printf("compilation de l'automate avec gcc monautomate.c -o auto \n");
+  
 
 }
 
