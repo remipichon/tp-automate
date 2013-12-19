@@ -34,10 +34,13 @@ void construire_status_etat()
 
   /* On ajoute à la main les etats ACCEPTATION */
 
-status_etat[2]=ACCEPTATION;
-
-status_etat[3]=ACCEPTATION;
+status_etat[0]=ACCEPTATION;
 }
+
+------------- expression regulière de cet automate -------------
+       ==>  (((a+b).c)*.#)    <==
+
+
 /*----------------------------------------------------------------------*/
 void construire_transition()
 {
@@ -48,23 +51,11 @@ void construire_transition()
  for(j=0;j<26;j++)
  transition[i][j]=-1;
 
- /* On ajoute Ã  la main les transitions */
+ /* On ajoute à  la main les transitions */
  /* Note : a=0, b=1, ..., z=25 */
 
- /* transition 0 lettre a 2 */
- transition[0][0]=1;
- /* transition 0 lettre b 3 */
- transition[0][1]=2;
- /* transition 0 lettre c 4 */
- transition[0][2]=3;
- /* transition 1 lettre a 2 */
- transition[1][0]=1;
- /* transition 1 lettre b 5 */
- transition[1][1]=4;
- /* transition 2 lettre a 4 */
- transition[2][0]=3;
- /* transition 4 lettre a 4 */
- transition[4][0]=3;
+ /* transition 0 lettre a 0 */
+ transition[0][0]=0;
 }
 /*----------------------------------------------------------------------*/
 char lire(){
