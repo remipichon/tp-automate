@@ -468,66 +468,51 @@ int **setDtrans(NODE* root, int **DTrans, ENS *etat, char *lettres, int nbLettre
             if (!isEmpty(ensTemp)) {
                 if (*maxEtat <= numEtat + 2) { //pour detecter avant le besoin de reallocation
                     printf("besoin de reallocation !\n");
-
 #ifdef TRACE
                     printf("DTrans avant \n");
                     printDTrans(DTrans, *maxEtat, nbLettre + 1);
 #endif
-
-
                     int i, j;
                     int oldMax = (*maxEtat);
                     *maxEtat += 20;
 
                     //realloc, ajout d'etats
                     DTrans = (int**) realloc(DTrans, (*maxEtat) * sizeof (int*));
-
                     //ajout des collones pour les nouveaux états
-                    for (i = oldMax; i < *maxEtat; i++) {
+                    for (i = oldMax; i < *maxEtat; i++) 
                         DTrans[i] = (int*) malloc((nbLettre + 1) * sizeof (int));
-                    }
-
+                    
                     //init des nouveaux etat
-                    for (i = oldMax; i < (*maxEtat); i++) {
-                        for (j = 0; j < nbLettre + 1; j++) {
+                    for (i = oldMax; i < (*maxEtat); i++) 
+                        for (j = 0; j < nbLettre + 1; j++) 
                             DTrans[i][j] = 0;
-                        }
-
-                    }
-
-
 #ifdef TRACE
                     printf("DTrans après  %d etat \n", *maxEtat);
                     printDTrans(DTrans, *maxEtat, nbLettre + 1);
 #endif
 
-
+/*
                     // printf("realloc de etat\n");
-                    /*
-                                       //realloc de etat
-                    //                   etat = (ENS*)realloc(etat, (*maxEtat) * sizeof(ENS)); 
-                    //                    realloc fonctionne pas alors realloc à la main 
-                                        ENS *etatTemp = etat;
-                                        etat = (ENS*) malloc(sizeof (ENS) * (*maxEtat));
-                                        for(i = 0; i < oldMax; i++){
-                                            printf("chainage de ");
-                                            affichage(etatTemp[i]);
-                                            etat[i] = etatTemp[i];
-                                        }
-                                        for(;i<*maxEtat;i++){
-                                            etat[i] = creerEnsemble();
-                                        }
-                                        free(etatTemp);
+                    //etat = (ENS*)realloc(etat, (*maxEtat) * sizeof(ENS)); 
+                    //realloc fonctionne pas alors realloc à la main 
+                    ENS *etatTemp = etat;
+                    etat = (ENS*) malloc(sizeof (ENS) * (*maxEtat));
+                    for (i = 0; i < oldMax; i++) {
+                        printf("chainage de ");
+                        affichage(etatTemp[i]);
+                        etat[i] = etatTemp[i];
+                    }
+                    for (; i<*maxEtat; i++) {
+                        etat[i] = creerEnsemble();
+                    }
+                    free(etatTemp);*/
 
 
-                   
-                    
-                    //                    printf("etat après ajout %d etatMax\n",*maxEtat);
-                    //                    printEtat(etat,*maxEtat);
+#ifdef TRACE
+                    printf("etat après ajout %d etatMax\n", *maxEtat);
+                    printEtat(etat,*maxEtat);
+#endif
 
-                    
-                                        //exit(1);
-                     */
                     printf("fin reallocation\n\n");
 
 
