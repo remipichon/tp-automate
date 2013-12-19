@@ -11,7 +11,7 @@
 
 #include "tree_agp.h"
 
-#define _PP 1
+#define _PP 1 
 #define _DP 2
 
 /********************************************************/
@@ -103,6 +103,18 @@ int initRoot(NODE * root, int nbPos, int existeLettre[26], int *nbLettresExistan
         root->DP = creerEnsemble();
     }
     return nbPos;
+}
+
+void setCorresPosLettres(NODE* root, char *posLettre, int nbPos, int *indice) {
+    if (root != NULL) {
+        if (feuille(root)) {
+            posLettre[(*indice)++] = root->var;
+        }
+        setCorresPosLettres(root->fg, posLettre, nbPos, indice);
+        setCorresPosLettres(root->fd, posLettre, nbPos, indice);
+
+    }
+
 }
 
 
@@ -340,7 +352,7 @@ void remplirTableauLettres(int existeLettre[26], char *lettres) {
  *      indice de tableau)
  * @return 
  */
-int verifEtatNonMarque(int DTrans[20][4], int nbEtat, int indiceEtatMarque) {
+int verifEtatNonMarque(int **DTrans, int nbEtat, int indiceEtatMarque) {
     int i;
     // printf("verif etat non marque : nb etat :%d \n",nbEtat);
     for (i = 0; i < nbEtat; i++) {
@@ -390,7 +402,7 @@ int addEtat(ENS *etat, ENS ensTemp, int* nbEtat) {
  * @param numEtat
  * @param indiceEtatMarque
  */
-void marquerEtat(int DTrans[20][4], int numEtat, int indiceEtatMarque) {
+void marquerEtat(int **DTrans, int numEtat, int indiceEtatMarque) {
     DTrans[numEtat][indiceEtatMarque] = 1;
 }
 
@@ -400,11 +412,13 @@ void marquerEtat(int DTrans[20][4], int numEtat, int indiceEtatMarque) {
  * @param nbLigne
  * @param nbCol
  */
-void printDTrans(int DTrans[20][4], int nbLigne, int nbCol) {
+void printDTrans(int **DTrans, int nbLigne, int nbCol) {
     int i, j;
-    for (i = 0; i < 6; i++) {
-        for (j = 0; j < 4; j++)
+    for (i = 0; i < nbLigne; i++) {
+        for (j = 0; j < nbCol; j++) {
+            if (j == nbCol - 1) printf(" marqué : ");
             printf("%d ", DTrans[i][j]);
+        }
         printf("\n");
 
     }
@@ -429,15 +443,15 @@ void printEtat(ENS *etat, int nbEtat) {
  * (pour les arguments, voir commentaires plus
  * haut)
  */
-void setDtrans(NODE* root, int DTrans[20][4], ENS *etat, char *lettres, int nbLettre, ENS *posSuivante, int nbPos, char* corresPosLettres) {
+void setDtrans(NODE* root, int **DTrans, ENS *etat, char *lettres, int nbLettre, ENS *posSuivante, int nbPos, char* corresPosLettres, int *nbEtat, int *maxEtat) {
     int numEtat = 0;
     int cptLigneParcours = 0;
-    int noColone, pos, indiceEtat, nbEtat = 1;
+    int noColone, pos, indiceEtat;
     ENS ensTemp;
     //	1. Initialisation : le seul état de Dtrans non marqué est PremièrePos(racine)
     etat[numEtat] = root->PP;
     //	2. Tant qu’il existe un état ETAT non marqué faire
-    while ((numEtat = verifEtatNonMarque(DTrans, nbEtat, nbLettre)) != -1) {
+    while ((numEtat = verifEtatNonMarque(DTrans, *nbEtat, nbLettre)) != -1) {
         //	3. Pour chaque position (- la derniere)  faire
         for (noColone = 0; noColone < nbLettre; noColone++) {
             ensTemp = creerEnsemble();
@@ -452,7 +466,43 @@ void setDtrans(NODE* root, int DTrans[20][4], ENS *etat, char *lettres, int nbLe
             //verifier si l'union ensTemp existe dans ENS* etat
             //l'ensemble vide ne fait pas parti des etats
             if (!isEmpty(ensTemp)) {
-                indiceEtat = addEtat(etat, ensTemp, &nbEtat); // si etat n'existe pas, on l'ajoute - getIndice
+                if (*maxEtat <= numEtat + 1) { //pour detecter avant le besoin de reallocation
+                    printf("besoin de reallocation !\n DTrans avant \n");
+                    printDTrans(DTrans, (*maxEtat), nbLettre + 1);
+
+                    int i, j;
+                    int oldMax = (*maxEtat);
+                    *maxEtat += 20;
+
+                    //realloc, ajout d'etats
+                    DTrans = (int**) realloc(DTrans, (*maxEtat) * sizeof (int*));
+
+                    //ajout des collones pour les nouveaux états
+                    for (i = oldMax; i < *maxEtat; i++) {
+                        DTrans[i] = (int*) malloc((nbLettre + 1) * sizeof (int));
+                    }
+                    
+                    //init des nouveaux etat
+                    for (i = oldMax; i < (*maxEtat); i++) {
+                        for (j = 0; j < nbLettre + 1; j++) {
+                            DTrans[i][j] = 0;
+                        }
+
+                    }
+
+
+                   //realloc de etat
+                   // etat = (ENS*)realloc(etat, (*maxEtat) * sizeof(ENS));
+
+
+                    printf("DTrans après %d etatMax\n", *(maxEtat));
+                    printDTrans(DTrans, (*maxEtat), nbLettre + 1);
+
+
+
+
+                }
+                indiceEtat = addEtat(etat, ensTemp, nbEtat); // si etat n'existe pas, on l'ajoute - getIndice
                 DTrans[numEtat][noColone] = indiceEtat; //DTrans[numEtat][noColone] = indice    
             }
 
@@ -464,28 +514,21 @@ void setDtrans(NODE* root, int DTrans[20][4], ENS *etat, char *lettres, int nbLe
 
 
 /********************************************************/
+
 /****** ecriture du fichier c ***********/
 
 
-int setAcceptation(int *tableauAcceptation, ENS *etat, int nbEtat, int nbPos){
+int setAcceptation(int *tableauAcceptation, ENS *etat, int nbEtat, int nbPos) {
     int nbAcceptation = 0;
     int i;
-    for(i = 0; i < nbEtat ; i++ ){
-        affichage(etat[i]);
-        if( existeElem(etat[i], nbPos) ){ //si diese present dans l'état, c'est un etat d'acceptation
+    for (i = 0; i < nbEtat; i++)
+        if (existeElem(etat[i], nbPos)) //si diese present dans l'état, c'est un etat d'acceptation
             tableauAcceptation[nbAcceptation++] = i;
-            
-        }
-    }
-    
+
     return nbAcceptation;
-    
-    
 }
 
-
-
-void ecrireFichier(int Dtrans[20][4], int* tableauAcceptation, int nbEetat, int nbEtatAffectation) {
+void ecrireFichier(int **Dtrans, int* tableauAcceptation, int nbEetat, int nbEtatAffectation) {
     int i, j;
     FILE *f;
     //on copie la "tÃªte" du fichier
@@ -496,7 +539,7 @@ void ecrireFichier(int Dtrans[20][4], int* tableauAcceptation, int nbEetat, int 
     //on ecrit les Ã©tats d'acceptation
     for (i = 0; i < nbEtatAffectation; i++) {
         //if (tableauAcceptation[i] == 1)
-            fprintf(f, "\nstatus_etat[%d]=ACCEPTATION;\n", tableauAcceptation[i]);
+        fprintf(f, "\nstatus_etat[%d]=ACCEPTATION;\n", tableauAcceptation[i]);
     }
     fprintf(f, "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
             "}",
@@ -518,7 +561,7 @@ void ecrireFichier(int Dtrans[20][4], int* tableauAcceptation, int nbEetat, int 
         for (j = 0; j < 3; j++) {
             if (Dtrans[i][j] != 0) {
                 fprintf(f, " /* transition %d lettre %c %d */\n", i, j + 97, Dtrans[i][j]);
-                fprintf(f, " transition[%d][%d]=%d;\n", i, j, Dtrans[i][j]-1);  //car je n'ai pas d'état 0 !!
+                fprintf(f, " transition[%d][%d]=%d;\n", i, j, Dtrans[i][j] - 1); //car je n'ai pas d'état 0 !!
             }
         }
     }
@@ -540,12 +583,22 @@ void ecrireFichier(int Dtrans[20][4], int* tableauAcceptation, int nbEetat, int 
 void tp(NODE * root) {
     printf("**********************   Debut :\n");
     int existeLettre[26]; //tableau d'existance lettres
-    int i, nbLettresExistantes = 0;
+    int i, nbLettresExistantes = 0, j;
     for (i = 0; i < 26; i++)
         existeLettre[i] = 0;
-    int nbPos = initRoot(root, 0, existeLettre, &nbLettresExistantes); //init tableau lettres aussi
-    char corresPosLettres[] = {'a', 'b', 'a', 'b', 'c','#'}; //TODO via de l'algo)
 
+    int nbPos = initRoot(root, 0, existeLettre, &nbLettresExistantes); //init tableau lettres aussi
+    char *corresPosLettres = (char*) malloc(sizeof (char)*nbPos); //tableau de correspondance position-lettre 
+    int indice = 0;
+    setCorresPosLettres(root, corresPosLettres, nbPos, &indice);
+
+#ifdef TRACE
+    printf("nb pos : %d \n", nbPos);
+    printf("correspondance posistion lettre : ");
+    for (i = 0; i < nbPos; i++)
+        printf("%c ", corresPosLettres[i]);
+    printf("\n");
+#endif
 
 
     printf("regex : ");
@@ -561,64 +614,77 @@ void tp(NODE * root) {
     setPDP(root, _PP);
     printf("set DP ..\n");
     setPDP(root, _DP);
+#ifdef TRACE
     printf("affichage de l'arbre décoré (via un parcours postfixe), c'est Noel ! \n");
     afficherDecoration(root);
+#endif
 
     printf("set pos suivante..\n");
-    ENS posSuivante[nbPos]; //TODO en dynamique
+    ENS *posSuivante = (ENS*) malloc(sizeof (ENS) * nbPos); //TODO en dynamique
     for (i = 0; i < nbPos; i++) {
         posSuivante[i] = creerEnsemble();
     }
     setPosSuivante(root, posSuivante, nbPos);
 
-
+#ifdef TRACE
     printf("affichage pos suviante\n");
     for (i = 0; i < nbPos; i++) {
         printf("posSuivante(%d) : ", i + 1);
         affichage(posSuivante[i]);
     }
     printf("\n");
+#endif
 
 
 
 
-    int j;
-    //    int DTrans[20][nbLettresExistantes + 1]; //matrice de transition
-    int DTrans[20][4]; //matrice de transition  //TODO en dynamique
-    for (i = 0; i < 20; i++)
-        for (j = 0; j < 4; j++)
+    int** DTrans;
+    int maxEtat = 2; //TODO, gerer le depassement de tableau crée dynamiquement (j'ai une structure d'ensemble pour ca)
+
+    DTrans = (int**) malloc(maxEtat * sizeof (int*));
+    for (i = 0; i < maxEtat; i++) {
+        DTrans[i] = (int*) malloc((nbLettresExistantes + 1) * sizeof (int));
+    }
+
+
+    for (i = 0; i < maxEtat; i++)
+        for (j = 0; j < nbLettresExistantes + 1; j++)
             DTrans[i][j] = 0;
-
-    //printDTrans(DTrans, 20, nbLettresExistantes + 1); //putain de probleme d'affichage
 
 
     char lettres[nbLettresExistantes];
     remplirTableauLettres(existeLettre, lettres);
 
-    int nbEtat = 4;
-    
-    ENS etat[20]; //tableau associant un etat à un ensemble //TODO overcapacity
+    int nbEtat = 1;
+
+    ENS *etat = (ENS*) malloc(sizeof (ENS) * maxEtat); //tableau associant un etat à un ensemble //TODO overcapacity
     printf("set Dtrans..\n");
-    setDtrans(root, DTrans, etat, lettres, nbLettresExistantes, posSuivante, nbPos, corresPosLettres);
+    setDtrans(root, DTrans, etat, lettres, nbLettresExistantes, posSuivante, nbPos, corresPosLettres, &nbEtat, &maxEtat);
 
     printf("\n\n\nTable de transition\n");
-    printDTrans(DTrans, nbEtat, 4); //TODO en dynamique, n'afficher que les etats qu'il faut (nbEtat)
-    
+    printDTrans(DTrans, nbEtat, nbLettresExistantes + 1); //TODO en dynamique, n'afficher que les etats qu'il faut (nbEtat)
+
     printf("set tableauAcception...\n");
-    int tableauAcceptation[nbEtat]; //au plus, nbEtat d'acceptation
-    
+    int *tableauAcceptation = (int*) malloc(sizeof (int)*nbEtat); //au plus, nbEtat d'acceptation
+
     int nbAcceptation = setAcceptation(tableauAcceptation, etat, nbEtat, nbPos);
-    
-    printf("Etat d'acceptation : \n"); 
-    for( i=0; i < nbAcceptation; i++ )
+
+    printf("Etat d'acceptation : \n");
+    for (i = 0; i < nbAcceptation; i++)
         affichage(etat[tableauAcceptation[i]]);
-    
+
     printf("write output file...\n");
-    ecrireFichier(DTrans, tableauAcceptation, nbEtat+1, nbAcceptation);
-    
-    
+    ecrireFichier(DTrans, tableauAcceptation, nbEtat + 1, nbAcceptation);
+
+
     printf("compilation de l'automate avec gcc monautomate.c -o auto \n");
-  
+
+
+    //libeartion de la memoire
+    //    for (int i = 0; i < dimension1_max; i++) {
+    //        free(DTrans[i]);
+    //    }
+    //    free(DTrans);
 
 }
 

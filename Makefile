@@ -2,10 +2,16 @@ TOOL	=auto
 YACC	=bison
 LEX	=flex
 CC	=gcc
+TRACE	=
 
 CFLAGS	+=-g -Wall
 
 all: $(TOOL)
+	
+trace: debug_compile all
+
+debug_compile: 
+	 $(eval TRACE += -DTRACE )
 
 #utilisation de lex
 lex.yy.c: $(TOOL).l
@@ -28,7 +34,7 @@ $(TOOL): $(TOOL).c  tp_agp_auto.c
 	@echo "#########Compilation de l'analyseur d'expressions reguliere"
 	$(CC)  $(CFLAGS)  $(TOOL).c -c -o $(TOOL).o 
 	@echo "#########Compilation des action faites sur l'AST (votre travail)"
-	$(CC) $(CFLAGS) tp_agp_auto.c -c
+	$(CC) $(CFLAGS) tp_agp_auto.c -c $(TRACE)
 	@echo "#########Compilation des action faites sur l'AST (votre travail)"
 	$(CC) $(CFLAGS) ensemble.c -c
 	@echo "#########Edition de lien: production du generateur d'automate"
