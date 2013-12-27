@@ -786,8 +786,7 @@ void tp(NODE * root) {
         supprimerEnsemble(etat[i]);
     }
     
-    sleep(2);
-    
+       
     gettimeofday(&stop, NULL);
     printf("L'algo a pris %lu secondes\n", stop.tv_usec - start.tv_usec);
 #ifndef BENCH
