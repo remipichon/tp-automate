@@ -7,7 +7,12 @@ TRACE	=
 CFLAGS	+=-g -Wall
 
 all: $(TOOL)
-	
+
+bench : benchmarks all
+
+benchmarks: 
+	$(eval TRACE += -DBENCH )
+
 trace: debug_compile all
 
 debug_compile: 

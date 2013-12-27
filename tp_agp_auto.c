@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include<sys/time.h>
+
 #include "tree_agp.h"
 
 #define _PP 1 
@@ -479,38 +481,38 @@ int **setDtrans(NODE* root, int **DTrans, ENS *etat, char *lettres, int nbLettre
                     //realloc, ajout d'etats
                     DTrans = (int**) realloc(DTrans, (*maxEtat) * sizeof (int*));
                     //ajout des collones pour les nouveaux états
-                    for (i = oldMax; i < *maxEtat; i++) 
+                    for (i = oldMax; i < *maxEtat; i++)
                         DTrans[i] = (int*) malloc((nbLettre + 1) * sizeof (int));
-                    
+
                     //init des nouveaux etat
-                    for (i = oldMax; i < (*maxEtat); i++) 
-                        for (j = 0; j < nbLettre + 1; j++) 
+                    for (i = oldMax; i < (*maxEtat); i++)
+                        for (j = 0; j < nbLettre + 1; j++)
                             DTrans[i][j] = 0;
 #ifdef TRACE
                     printf("DTrans après  %d etat \n", *maxEtat);
                     printDTrans(DTrans, *maxEtat, nbLettre + 1);
 #endif
 
-/*
-                    // printf("realloc de etat\n");
-                    //etat = (ENS*)realloc(etat, (*maxEtat) * sizeof(ENS)); 
-                    //realloc fonctionne pas alors realloc à la main 
-                    ENS *etatTemp = etat;
-                    etat = (ENS*) malloc(sizeof (ENS) * (*maxEtat));
-                    for (i = 0; i < oldMax; i++) {
-                        printf("chainage de ");
-                        affichage(etatTemp[i]);
-                        etat[i] = etatTemp[i];
-                    }
-                    for (; i<*maxEtat; i++) {
-                        etat[i] = creerEnsemble();
-                    }
-                    free(etatTemp);*/
+                    /*
+                                        // printf("realloc de etat\n");
+                                        //etat = (ENS*)realloc(etat, (*maxEtat) * sizeof(ENS)); 
+                                        //realloc fonctionne pas alors realloc à la main 
+                                        ENS *etatTemp = etat;
+                                        etat = (ENS*) malloc(sizeof (ENS) * (*maxEtat));
+                                        for (i = 0; i < oldMax; i++) {
+                                            printf("chainage de ");
+                                            affichage(etatTemp[i]);
+                                            etat[i] = etatTemp[i];
+                                        }
+                                        for (; i<*maxEtat; i++) {
+                                            etat[i] = creerEnsemble();
+                                        }
+                                        free(etatTemp);*/
 
 
 #ifdef TRACE
                     printf("etat après ajout %d etatMax\n", *maxEtat);
-                    printEtat(etat,*maxEtat);
+                    printEtat(etat, *maxEtat);
 #endif
 
                     printf("fin reallocation\n\n");
@@ -616,6 +618,11 @@ void ecrireFichier(NODE* root, int **Dtrans, int* tableauAcceptation, int nbEeta
 /*-----------------------------------------------------------------*/
 
 void tp(NODE * root) {
+
+
+    struct timeval stop, start;
+    gettimeofday(&start, NULL);
+
     //allocation statique    
     int existeLettre[26]; //tableau d'existance lettres
     int i, nbLettresExistantes = 0, j;
@@ -640,17 +647,20 @@ void tp(NODE * root) {
 
 
 
-
+#ifndef BENCH
     printf("**********************   Debut :\n");
+#endif
     for (i = 0; i < 26; i++)
         existeLettre[i] = 0;
 
 
     setCorresPosLettres(root, corresPosLettres, nbPos, &indice);
 
+#ifndef BENCH
     printf("regex : ");
     afficherER(root, stdout);
     printf("\n");
+#endif
 
 #ifdef TRACE
     printf("nb pos : %d \n", nbPos);
@@ -661,14 +671,21 @@ void tp(NODE * root) {
 #endif
 
 
-
+#ifndef BENCH
     printf("set Pos..\n");
+#endif
     setPos(root, 1);
+#ifndef BENCH
     printf("set Annulable..\n");
+#endif
     setAnnulable(root);
+#ifndef BENCH
     printf("set PP..\n");
+#endif
     setPDP(root, _PP);
+#ifndef BENCH
     printf("set DP ..\n");
+#endif
     setPDP(root, _DP);
 #ifdef TRACE
     printf("\nAffichage de l'arbre décoré (via un parcours postfixe), c'est Noel ! \n");
@@ -676,7 +693,9 @@ void tp(NODE * root) {
     printf("\n");
 #endif
 
+#ifndef BENCH
     printf("set pos suivante..\n");
+#endif
     for (i = 0; i < nbPos; i++) {
         posSuivante[i] = creerEnsemble();
     }
@@ -707,15 +726,18 @@ void tp(NODE * root) {
 
     remplirTableauLettres(existeLettre, lettres);
 
-
+#ifndef BENCH
     printf("set Dtrans..\n");
+#endif
     DTrans = setDtrans(root, DTrans, etat, lettres, nbLettresExistantes, posSuivante, nbPos, corresPosLettres, &nbEtat, &maxEtat);
 #ifdef TRACE
     printf("\nTable de transition\n");
     printDTrans(DTrans, nbEtat, nbLettresExistantes + 1); //TODO en dynamique, n'afficher que les etats qu'il faut (nbEtat)
     printf("\n\n");
 #endif
+#ifndef BENCH
     printf("set tableauAcception...\n");
+#endif
     int *tableauAcceptation = (int*) malloc(sizeof (int)*nbEtat); //au plus, nbEtat d'acceptation
     nbAcceptation = setAcceptation(tableauAcceptation, etat, nbEtat, nbPos);
 
@@ -725,9 +747,10 @@ void tp(NODE * root) {
         affichage(etat[tableauAcceptation[i]]);
     printf("\n\n");
 #endif
-
+#ifndef BENCH
     printf("write output file...\n");
     ecrireFichier(root, DTrans, tableauAcceptation, nbEtat + 1, nbAcceptation);
+#endif
 
 #ifdef TRACE
     printf("\nWhouhou tout a fonctionné ! \nMerci pour votre lecture et savourez la puissance des expressions regulières !\n\n");
@@ -736,7 +759,10 @@ void tp(NODE * root) {
 
 
     /******   liberation de la mémoire allouée par des malloc/realloc    ****/
+#ifndef BENCH
     printf("liberation de la mémoire allouée via malloc/realloc..\n\n");
+        #endif
+
     //int **DTrans
     for (i = 0; i < maxEtat; i++) {
         free(DTrans[i]);
@@ -759,10 +785,16 @@ void tp(NODE * root) {
     for (i = 0; i < nbEtat; i++) {
         supprimerEnsemble(etat[i]);
     }
-
-
+    
+    sleep(2);
+    
+    gettimeofday(&stop, NULL);
+    printf("L'algo a pris %lu secondes\n", stop.tv_usec - start.tv_usec);
+#ifndef BENCH
     printf("Terminé, automate créé. \nCompilation de l'automate avec gcc monautomate.c -o auto \n");
-
+#else
+     printf("Terminé, automate non créé afin de ne pas perdre du temps à fair des output\n");
+#endif
 }
 
 
